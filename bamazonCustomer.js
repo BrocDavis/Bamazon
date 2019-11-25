@@ -25,12 +25,11 @@ var connection = mysql.createConnection({
 
 connection.connect(function(err) {
     if (err) throw err;
-    displayTable();
   });
-mkOrder();
+
   function mkOrder() {
     inquirer
-      .prompt(
+      .prompt([
           {
             type: 'input',
             name: 'item_id',
@@ -44,10 +43,10 @@ mkOrder();
             message: 'How many would you like?',
             validate: inputCheck,
             filter: Number
-        })
+        }])
       .then(function(answer) {
-          let item = input.item_id;
-          let amount = input.quantity;
+          let item = answer.item_id;
+          let amount = answer.quantity;
 
           let queryStr = 'SELECT * FROM products WHERE ?';
 
@@ -55,30 +54,30 @@ mkOrder();
             if (err) throw err;
 
             if (data.length === 0) {
-                console.log('Error: Invalid Item ID. Select a valid Item ID.');
-                displayProducts();
+                console.log('Please select a valid Item ID.');
+                mkOrder();
 
             } else {
                 var productData = data[0];
 
                 if (amount <= productData.stock_quantity) {
-                    console.log('Good news, the product you want to buy is in stock! Placing order!');
 
-                    var updateQuery = 'UPDATE products SET stock_quantity = ' + (productData.stock_quantity - quantity) + ' WHERE item_id = ' + item;
+                    let updateQuery = 'UPDATE products SET stock_quantity = ' + (productData.stock_quantity - amount) + ' WHERE item_id = ' + item;
 
                     connection.query(updateQuery, function (err, data) {
                         if (err) throw err;
 
-                        console.log('Your order has been placed! Your total comes to $' + productData.price * quantity);
-                        console.log("\n-----------------------------------------------------------------------------\n");
+                        console.log('Your total comes to $' + productData.price * amount);
 
                         connection.end();
+                        displayTable();
+                        mkOrder();
                     })
                 } else {
                     console.log("There's not enough stock. Please check the amount you would like and try to order again.");
-                    console.log("\n-------------------------------------");
-
+                   
                     displayTable();
+                    mkOrder();
                 }
             }
         })
@@ -97,10 +96,13 @@ mkOrder();
             tableStr += data[i].item_id + " ";
             tableStr += data[i].product_name + " ";
             tableStr += data[i].department_name + " ";
-            tableStr += data[i].price + " ";
-            tableStr += data[i].stock_quantity + '\n';
+            tableStr += "price: "+data[i].price + " ";
+            tableStr += "quantity: " +data[i].stock_quantity;
 
             console.log(tableStr);
         }
     })
   }
+//display table before mkOrder is called.
+  displayTable();
+  mkOrder();
