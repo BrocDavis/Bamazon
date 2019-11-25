@@ -11,7 +11,7 @@ CREATE TABLE products(
   stock_quantity  INT default 10
 );
 
-INSERT INTO products(product_name, department_name, price, stock_quantity);
+INSERT INTO products(product_name, department_name, price, stock_quantity)
 VALUES 
 ("Scarves","Clothing",15,20),
 ("Mittens","Clothing",10,20),
